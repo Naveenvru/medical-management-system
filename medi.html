@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical Management System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f8ff;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        input, select {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+        }
+        .search-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .bill-item {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Medical Management System</h1>
+        
+        <!-- Patient Management Section -->
+        <div class="section">
+            <h2>Patient Records</h2>
+            
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="Search by name or ID">
+                <button onclick="searchPatient()">Search</button>
+                <button onclick="sortPatientsByAge()">Sort by Age</button>
+                <button onclick="resetPatients()">Reset</button>
+            </div>
+            
+            <table id="patientTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Age</th>
+                        <th>Medical Problem</th>
+                        <th>Insurance</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="patientTableBody">
+                    <!-- Patient data will be inserted here -->
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Billing Section -->
+        <div class="section">
+            <h2>Billing System</h2>
+            
+            <div>
+                <label><strong>Selected Patient:</strong></label>
+                <span id="selectedPatientInfo">None selected</span>
+            </div>
+            
+            <div>
+                <label for="billDate">Date:</label>
+                <input type="date" id="billDate">
+            </div>
+            
+            <h3>Bill Items</h3>
+            <div id="billItems">
+                <div class="bill-item">
+                    <input type="text" class="itemDesc" placeholder="Description">
+                    <input type="number" class="itemQty" placeholder="Qty" min="1" value="1">
+                    <input type="number" class="itemPrice" placeholder="Price" min="0" step="0.01">
+                    <button onclick="removeBillItem(this)">Remove</button>
+                </div>
+            </div>
+            <button onclick="addBillItem()">Add Item</button>
+            
+            <div>
+                <label for="billTax">Tax (%):</label>
+                <input type="number" id="billTax" min="0" max="100" value="10">
+                
+                <label for="billDiscount">Discount (%):</label>
+                <input type="number" id="billDiscount" min="0" max="100" value="0">
+            </div>
+            
+            <div>
+                <h3>Total: $<span id="billTotal">0.00</span></h3>
+            </div>
+            
+            <button onclick="saveBill()">Save Bill</button>
+            <button onclick="clearBillForm()">Clear</button>
+            
+            <h3>Patient Bills</h3>
+            <table id="billsTable">
+                <thead>
+                    <tr>
+                        <th>Bill ID</th>
+                        <th>Date</th>
+                        <th>Items</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody id="billsTableBody">
+                    <!-- Bill data will be inserted here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Sample patient data
+        const patients = [
+            { id: "P1001", name: "John Smith", age: 45, problem: "Hypertension", insurance: "Blue Cross" },
+            { id: "P1002", name: "Emily Johnson", age: 32, problem: "Diabetes", insurance: "Aetna" },
+            { id: "P1003", name: "Michael Brown", age: 28, problem: "Asthma", insurance: "Medicare" },
+            { id: "P1004", name: "Sarah Davis", age: 60, problem: "Arthritis", insurance: "United Health" },
+            { id: "P1005", name: "Robert Wilson", age: 52, problem: "Heart Disease", insurance: "Cigna" },
+            { id: "P1006", name: "Jennifer Martinez", age: 38, problem: "Migraine", insurance: "Blue Shield" },
+            { id: "P1007", name: "David Anderson", age: 41, problem: "Back Pain", insurance: "Humana" },
+            { id: "P1008", name: "Jessica Taylor", age: 29, problem: "Allergies", insurance: "Kaiser" },
+            { id: "P1009", name: "William Thomas", age: 55, problem: "High Cholesterol", insurance: "Medicaid" },
+            { id: "P1010", name: "Amanda Garcia", age: 35, problem: "Anxiety", insurance: "Aetna" }
+        ];
+
+        // Sample bills data
+        let bills = [
+            { id: "B2001", patientId: "P1001", date: "2023-05-15", items: [
+                { description: "Consultation", quantity: 1, price: 150 },
+                { description: "Blood Test", quantity: 1, price: 75 }
+            ], tax: 10, discount: 0, total: 247.5 },
+            { id: "B2002", patientId: "P1002", date: "2023-06-20", items: [
+                { description: "Medication", quantity: 2, price: 45 },
+                { description: "Lab Work", quantity: 1, price: 120 }
+            ], tax: 10, discount: 5, total: 207.9 }
+        ];
+
+        // Current selected patient for billing
+        let selectedPatient = null;
+
+        // Display patients in the table
+        function displayPatients(patientList = patients) {
+            const tableBody = document.getElementById("patientTableBody");
+            tableBody.innerHTML = "";
+
+            patientList.forEach(patient => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${patient.id}</td>
+                    <td>${patient.name}</td>
+                    <td>${patient.age}</td>
+                    <td>${patient.problem}</td>
+                    <td>${patient.insurance}</td>
+                    <td class="action-buttons">
+                        <button onclick="selectPatientForBilling('${patient.id}')">Select</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Binary search for patients by ID
+        function binarySearchById(searchTerm) {
+            const sortedPatients = [...patients].sort((a, b) => a.id.localeCompare(b.id));
+            let left = 0;
+            let right = sortedPatients.length - 1;
+
+            while (left <= right) {
+                const mid = Math.floor((left + right) / 2);
+                const patient = sortedPatients[mid];
+                
+                if (patient.id === searchTerm) {
+                    return [patient];
+                } else if (patient.id.localeCompare(searchTerm) < 0) {
+                    left = mid + 1;
+                } else {
+                    right = mid - 1;
+                }
+            }
+            return [];
+        }
+
+        // Search patient by name or ID
+        function searchPatient() {
+            const searchTerm = document.getElementById("searchInput").value.trim();
+            if (!searchTerm) {
+                displayPatients();
+                return;
+            }
+
+            // First try binary search by ID
+            const resultsById = binarySearchById(searchTerm);
+            
+            if (resultsById.length > 0) {
+                displayPatients(resultsById);
+                return;
+            }
+
+            // If no ID match, search by name (linear search)
+            const resultsByName = patients.filter(p => 
+                p.name.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+            
+            displayPatients(resultsByName);
+        }
+
+        // Insertion sort by age
+        function insertionSortByAge() {
+            const sortedPatients = [...patients];
+            
+            for (let i = 1; i < sortedPatients.length; i++) {
+                const current = sortedPatients[i];
+                let j = i - 1;
+                
+                while (j >= 0 && sortedPatients[j].age > current.age) {
+                    sortedPatients[j + 1] = sortedPatients[j];
+                    j--;
+                }
+                
+                sortedPatients[j + 1] = current;
+            }
+            
+            return sortedPatients;
+        }
+
+        // Sort patients by age
+        function sortPatientsByAge() {
+            const sortedPatients = insertionSortByAge();
+            displayPatients(sortedPatients);
+        }
+
+        // Reset to show all patients
+        function resetPatients() {
+            document.getElementById("searchInput").value = "";
+            displayPatients();
+        }
+
+        // Select patient for billing
+        function selectPatientForBilling(patientId) {
+            selectedPatient = patients.find(p => p.id === patientId);
+            document.getElementById("selectedPatientInfo").textContent = 
+                `${selectedPatient.name} (${selectedPatient.id})`;
+            
+            // Set today's date as default
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById("billDate").value = today;
+            
+            // Show patient's bills
+            viewPatientBills(patientId);
+        }
+
+        // View patient's bills
+        function viewPatientBills(patientId) {
+            const patientBills = bills.filter(bill => bill.patientId === patientId);
+            const tableBody = document.getElementById("billsTableBody");
+            tableBody.innerHTML = "";
+
+            patientBills.forEach(bill => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${bill.id}</td>
+                    <td>${bill.date}</td>
+                    <td>${bill.items.map(item => `${item.description} (${item.quantity})`).join(", ")}</td>
+                    <td>$${bill.total.toFixed(2)}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Add bill item
+        function addBillItem() {
+            const billItems = document.getElementById("billItems");
+            const newItem = document.createElement("div");
+            newItem.className = "bill-item";
+            newItem.innerHTML = `
+                <input type="text" class="itemDesc" placeholder="Description">
+                <input type="number" class="itemQty" placeholder="Qty" min="1" value="1">
+                <input type="number" class="itemPrice" placeholder="Price" min="0" step="0.01">
+                <button onclick="removeBillItem(this)">Remove</button>
+            `;
+            billItems.appendChild(newItem);
+            
+            // Add event listeners for dynamic calculation
+            newItem.querySelector(".itemQty").addEventListener("input", calculateBillTotal);
+            newItem.querySelector(".itemPrice").addEventListener("input", calculateBillTotal);
+        }
+
+        // Remove bill item
+        function removeBillItem(button) {
+            button.parentElement.remove();
+            calculateBillTotal();
+        }
+
+        // Calculate bill total
+        function calculateBillTotal() {
+            const items = document.querySelectorAll(".bill-item");
+            let subtotal = 0;
+            
+            items.forEach(item => {
+                const qty = parseFloat(item.querySelector(".itemQty").value) || 0;
+                const price = parseFloat(item.querySelector(".itemPrice").value) || 0;
+                subtotal += qty * price;
+            });
+            
+            const taxRate = parseFloat(document.getElementById("billTax").value) || 0;
+            const discountRate = parseFloat(document.getElementById("billDiscount").value) || 0;
+            
+            const tax = subtotal * (taxRate / 100);
+            const discount = subtotal * (discountRate / 100);
+            const total = subtotal + tax - discount;
+            
+            document.getElementById("billTotal").textContent = total.toFixed(2);
+        }
+
+        // Save bill
+        function saveBill() {
+            if (!selectedPatient) {
+                alert("Please select a patient first");
+                return;
+            }
+            
+            const billDate = document.getElementById("billDate").value;
+            if (!billDate) {
+                alert("Please enter a bill date");
+                return;
+            }
+            
+            const items = [];
+            const itemElements = document.querySelectorAll(".bill-item");
+            
+            itemElements.forEach(item => {
+                const description = item.querySelector(".itemDesc").value;
+                const quantity = parseFloat(item.querySelector(".itemQty").value) || 0;
+                const price = parseFloat(item.querySelector(".itemPrice").value) || 0;
+                
+                if (description && quantity > 0 && price > 0) {
+                    items.push({ description, quantity, price });
+                }
+            });
+            
+            if (items.length === 0) {
+                alert("Please add at least one valid bill item");
+                return;
+            }
+            
+            const taxRate = parseFloat(document.getElementById("billTax").value) || 0;
+            const discountRate = parseFloat(document.getElementById("billDiscount").value) || 0;
+            
+            // Calculate subtotal
+            const subtotal = items.reduce((sum, item) => sum + (item.quantity * item.price), 0);
+            const tax = subtotal * (taxRate / 100);
+            const discount = subtotal * (discountRate / 100);
+            const total = subtotal + tax - discount;
+            
+            // Generate bill ID
+            const lastBillId = bills.length > 0 ? parseInt(bills[bills.length - 1].id.substring(1)) : 2000;
+            const newBillId = "B" + (lastBillId + 1);
+            
+            // Add new bill
+            const newBill = {
+                id: newBillId,
+                patientId: selectedPatient.id,
+                date: billDate,
+                items,
+                tax: taxRate,
+                discount: discountRate,
+                total
+            };
+            
+            bills.push(newBill);
+            
+            // Update bills table
+            viewPatientBills(selectedPatient.id);
+            
+            // Clear form
+            clearBillForm();
+            
+            alert(`Bill ${newBillId} saved successfully!`);
+        }
+
+        // Clear bill form
+        function clearBillForm() {
+            document.getElementById("billItems").innerHTML = `
+                <div class="bill-item">
+                    <input type="text" class="itemDesc" placeholder="Description">
+                    <input type="number" class="itemQty" placeholder="Qty" min="1" value="1">
+                    <input type="number" class="itemPrice" placeholder="Price" min="0" step="0.01">
+                    <button onclick="removeBillItem(this)">Remove</button>
+                </div>
+            `;
+            document.getElementById("billTax").value = 10;
+            document.getElementById("billDiscount").value = 0;
+            document.getElementById("billTotal").textContent = "0.00";
+            
+            // Re-add event listeners
+            document.querySelector(".itemQty").addEventListener("input", calculateBillTotal);
+            document.querySelector(".itemPrice").addEventListener("input", calculateBillTotal);
+        }
+
+        // Initialize the page
+        window.onload = function() {
+            displayPatients();
+            
+            // Set today's date as default
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById("billDate").value = today;
+            
+            // Set up event listeners for dynamic bill calculation
+            document.getElementById("billTax").addEventListener("input", calculateBillTotal);
+            document.getElementById("billDiscount").addEventListener("input", calculateBillTotal);
+            document.querySelector(".itemQty").addEventListener("input", calculateBillTotal);
+            document.querySelector(".itemPrice").addEventListener("input", calculateBillTotal);
+        };
+    </script>
+</body>
+</html>
